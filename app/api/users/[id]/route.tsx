@@ -1,34 +1,29 @@
+import z from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { UserUpdateSchema } from "../schema";
+import { prisma } from "@/prisma/client";
+import { User } from "@/app/generated/prisma/client";
+import { ErrorResponse } from "@/app/types";
 
 interface Props {
-  params: Promise<{ id: number }>;
+  params: Promise<{ id: string }>;
 }
 
-interface User {
-  id: number;
-  name: string;
-}
-
-interface UserUpdateRequest {
-  name: string;
-}
-
-interface ErrorResponse {
-  error: string;
-}
+type UserUpdateRequest = z.infer<typeof UserUpdateSchema>;
 
 export async function GET(
   request: NextRequest,
   { params }: Props,
 ): Promise<NextResponse<User | ErrorResponse>> {
   const { id } = await params;
-  if (id > 10)
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  return NextResponse.json({
-    id: id,
-    name: "John",
+  const user = await prisma.user.findFirst({
+    where: {
+      id: Number.parseInt(id),
+    },
   });
+  if (!user)
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  return NextResponse.json(user);
 }
 
 export async function PATCH(
@@ -44,14 +39,24 @@ export async function PATCH(
     );
 
   const { id } = await params;
-
-  if (id > 10)
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  return NextResponse.json({
-    id: id,
-    ...validation.data,
-    email: "email@domain.com",
+  const user = await prisma.user.findUnique({
+    where: { id: Number.parseInt(id) },
   });
+
+  if (!user)
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  const { name } = validation.data;
+  const updatedUser = await prisma.user.update<{
+    where: { id: number };
+    data: UserUpdateRequest;
+  }>({
+    where: { id: Number.parseInt(id) },
+    data: {
+      name: name,
+    },
+  });
+  return NextResponse.json(updatedUser);
 }
 
 export async function DELETE(
@@ -59,7 +64,18 @@ export async function DELETE(
   { params }: Props,
 ): Promise<NextResponse<null | ErrorResponse>> {
   const { id } = await params;
-  if (id > 10)
+  const user = await prisma.user.findUnique({
+    where: {
+      id: Number.parseInt(id),
+    },
+  });
+  if (!user)
     return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  await prisma.user.delete({
+    where: {
+      id: Number.parseInt(id),
+    },
+  });
   return new NextResponse(null, { status: 204 });
 }

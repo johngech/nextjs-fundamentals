@@ -1,36 +1,43 @@
+import z from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { UserCreateSchema } from "./schema";
+import { prisma } from "@/prisma/client";
+import { User } from "@/app/generated/prisma/client";
+import { ErrorResponse } from "@/app/types";
 
-interface UserCreateRequest {
-  name: string;
-  email: string;
-}
+type UserCreateRequest = z.infer<typeof UserCreateSchema>;
 
-interface ErrorResponse {
-  error: string;
-}
-
-export function GET(request: NextRequest): NextResponse<UserCreateRequest[]> {
-  return NextResponse.json([
-    { id: 1, name: "John", email: "abc@domain.com" },
-    { id: 2, name: "Dereje", email: "cdf@domain.com" },
-  ]);
+export async function GET(request: NextRequest): Promise<NextResponse<User[]>> {
+  const users = await prisma.user.findMany();
+  return NextResponse.json(users);
 }
 
 export async function POST(
   request: NextRequest,
-): Promise<NextResponse<UserCreateRequest | ErrorResponse>> {
-  /** Custom email validator
-   *   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!new RegExp(emailRegex).exec(body.email))
-       return NextResponse.json({ error: "Email is required" }, { status: 400 });
-    */
+): Promise<NextResponse<User | ErrorResponse>> {
   const body: UserCreateRequest = await request.json();
-  const validated = UserCreateSchema.safeParse(body);
-  if (!validated.success)
+  const validation = UserCreateSchema.safeParse(body);
+  if (!validation.success)
     return NextResponse.json(
-      { error: validated.error.message },
+      { error: validation.error.message },
       { status: 400 },
     );
-  return NextResponse.json({ id: 1, ...validated.data }, { status: 201 });
+
+  const { name, email } = validation.data;
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+  });
+
+  if (user)
+    return NextResponse.json({ error: "User already exist!" }, { status: 400 });
+
+  const newUser = await prisma.user.create<{ data: UserCreateRequest }>({
+    data: {
+      name: name,
+      email: email,
+    },
+  });
+  return NextResponse.json(newUser, { status: 201 });
 }

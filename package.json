@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/adapter-mariadb": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "dotenv": "^17.2.3",
     "fast-sort": "^3.4.1",
     "next": "16.1.6",
     "react": "19.2.3",
@@ -23,6 +26,7 @@
     "daisyui": "^5.5.16",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "prisma": "^7.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
