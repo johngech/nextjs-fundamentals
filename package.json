@@ -14,6 +14,7 @@
     "dotenv": "^17.2.3",
     "fast-sort": "^3.4.1",
     "next": "16.1.6",
+    "next-cloudinary": "^6.17.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "zod": "^4.3.6"

@@ -17,4 +17,7 @@ export const envConfig = {
     password: loadEnv("DB_PASSWORD"),
     dbName: loadEnv("DB_NAME"),
   },
+  cloudinary: {
+    publicCloudName: loadEnv("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME"),
+  },
 };

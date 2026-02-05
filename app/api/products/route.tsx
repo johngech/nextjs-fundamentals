@@ -42,7 +42,7 @@ export async function POST(
       { status: 404 },
     );
 
-  const product = await prisma.product.create<{ data: ProductCreateRequest }>({
+  const product = await prisma.product.create({
     data: {
       userId: userId,
       title: title,

@@ -47,10 +47,7 @@ export async function PATCH(
     return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const { name } = validation.data;
-  const updatedUser = await prisma.user.update<{
-    where: { id: number };
-    data: UserUpdateRequest;
-  }>({
+  const updatedUser = await prisma.user.update({
     where: { id: Number.parseInt(id) },
     data: {
       name: name,
