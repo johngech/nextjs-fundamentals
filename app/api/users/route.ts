@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { UserCreateSchema } from "./schema";
 import { prisma } from "@/prisma/client";
@@ -7,14 +7,25 @@ import { ErrorResponse } from "@/app/types";
 
 type UserCreateRequest = z.infer<typeof UserCreateSchema>;
 
-export async function GET(request: NextRequest): Promise<NextResponse<User[]>> {
+type UserResponse = Omit<User, "password">;
+
+export async function GET(
+  request: NextRequest,
+): Promise<NextResponse<UserResponse[]>> {
   const users = await prisma.user.findMany();
-  return NextResponse.json(users);
+  const response: UserResponse[] = users.map((user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    emailVerified: user.emailVerified,
+    image: user.image,
+  }));
+  return NextResponse.json(response);
 }
 
 export async function POST(
   request: NextRequest,
-): Promise<NextResponse<User | ErrorResponse>> {
+): Promise<NextResponse<UserResponse | ErrorResponse>> {
   const body: UserCreateRequest = await request.json();
   const validation = UserCreateSchema.safeParse(body);
   if (!validation.success)
@@ -39,5 +50,14 @@ export async function POST(
       email: email,
     },
   });
-  return NextResponse.json(newUser, { status: 201 });
+  return NextResponse.json(
+    {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      emailVerified: newUser.emailVerified,
+      image: newUser.image,
+    },
+    { status: 201 },
+  );
 }

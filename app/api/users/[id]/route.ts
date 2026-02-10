@@ -11,25 +11,33 @@ interface Props {
 
 type UserUpdateRequest = z.infer<typeof UserUpdateSchema>;
 
+type UserResponse = Omit<User, "password">;
+
 export async function GET(
   request: NextRequest,
   { params }: Props,
-): Promise<NextResponse<User | ErrorResponse>> {
+): Promise<NextResponse<UserResponse | ErrorResponse>> {
   const { id } = await params;
   const user = await prisma.user.findFirst({
     where: {
-      id: Number.parseInt(id),
+      id: id,
     },
   });
   if (!user)
     return NextResponse.json({ error: "User not found" }, { status: 404 });
-  return NextResponse.json(user);
+  return NextResponse.json({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    emailVerified: user.emailVerified,
+    image: user.image,
+  });
 }
 
 export async function PATCH(
   request: NextRequest,
   { params }: Props,
-): Promise<NextResponse<UserUpdateRequest | ErrorResponse>> {
+): Promise<NextResponse<UserResponse | ErrorResponse>> {
   const body: UserUpdateRequest = await request.json();
   const validation = UserUpdateSchema.safeParse(body);
   if (!validation.success)
@@ -40,7 +48,7 @@ export async function PATCH(
 
   const { id } = await params;
   const user = await prisma.user.findUnique({
-    where: { id: Number.parseInt(id) },
+    where: { id: id },
   });
 
   if (!user)
@@ -48,12 +56,19 @@ export async function PATCH(
 
   const { name } = validation.data;
   const updatedUser = await prisma.user.update({
-    where: { id: Number.parseInt(id) },
+    where: { id: id },
     data: {
       name: name,
     },
   });
-  return NextResponse.json(updatedUser);
+
+  return NextResponse.json({
+    id: updatedUser.id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    emailVerified: updatedUser.emailVerified,
+    image: updatedUser.image,
+  });
 }
 
 export async function DELETE(
@@ -63,7 +78,7 @@ export async function DELETE(
   const { id } = await params;
   const user = await prisma.user.findUnique({
     where: {
-      id: Number.parseInt(id),
+      id: id,
     },
   });
   if (!user)
@@ -71,7 +86,7 @@ export async function DELETE(
 
   await prisma.user.delete({
     where: {
-      id: Number.parseInt(id),
+      id: id,
     },
   });
   return new NextResponse(null, { status: 204 });

@@ -20,4 +20,18 @@ export const envConfig = {
   cloudinary: {
     publicCloudName: loadEnv("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME"),
   },
+  auth: {
+    url: loadEnv("AUTH_URL"),
+    secret: loadEnv("AUTH_SECRET"),
+  },
+  authProviders: {
+    google: {
+      clientId: loadEnv("AUTH_GOOGLE_ID"),
+      clientSecret: loadEnv("AUTH_GOOGLE_SECRET"),
+      issuer: loadEnv("AUTH_GOOGLE_ISSUER"),
+    },
+    facebook: {
+      //
+    },
+  },
 };
