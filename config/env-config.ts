@@ -34,4 +34,9 @@ export const envConfig = {
       //
     },
   },
+  mailServer: {
+    resend: {
+      apiKey: loadEnv("RESEND_API_KEY"),
+    },
+  },
 };

@@ -6,12 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "preview-email": "email dev -p 3030"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/adapter-mariadb": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "@react-email/components": "^1.0.7",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "fast-sort": "^3.4.1",
@@ -19,9 +21,12 @@
     "next-cloudinary": "^6.17.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-email": "^5.2.8",
+    "resend": "^6.9.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@react-email/preview-server": "5.2.8",
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
