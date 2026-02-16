@@ -25,7 +25,6 @@ const UploadPage = () => {
       <CldUploadWidget
         uploadPreset="my-upload-preset"
         onSuccess={(results) => {
-          console.log(results);
           const uploadInfo = results?.info as CloudinaryResult;
           setPublicId(uploadInfo.public_id);
         }}
