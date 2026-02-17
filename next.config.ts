@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
+  compress: true,
   images: {
+    // domains: ["res.cloudinary.com","picsum.photos"],
+    // formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",

@@ -1,0 +1,85 @@
+# ---- Base Stage ----
+FROM oven/bun:1.3.9-alpine AS base
+WORKDIR /app
+
+# ---- Dependencies Stage ----
+FROM base AS deps
+COPY package.json bun.lock ./
+
+RUN bun install 
+
+# ---- Builder Stage ----
+FROM base AS builder
+WORKDIR /app
+
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
+COPY . .
+
+# Accept build arguments
+ARG DB_ENGINE
+ARG DB_HOST
+ARG DB_PORT
+ARG DB_USER
+ARG DB_PASSWORD
+ARG DB_NAME
+ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+ARG AUTH_URL
+ARG AUTH_SECRET
+ARG AUTH_GOOGLE_ID
+ARG AUTH_GOOGLE_SECRET
+ARG AUTH_GOOGLE_ISSUER
+ARG RESEND_API_KEY
+
+# Set environment variables for build
+ENV DB_ENGINE=${DB_ENGINE} \
+    DB_HOST=${DB_HOST} \
+    DB_PORT=${DB_PORT} \
+    DB_USER=${DB_USER} \
+    DB_PASSWORD=${DB_PASSWORD} \
+    DB_NAME=${DB_NAME} \
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME} \
+    AUTH_URL=${AUTH_URL} \
+    AUTH_SECRET=${AUTH_SECRET} \
+    AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID} \
+    AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET} \
+    AUTH_GOOGLE_ISSUER=${AUTH_GOOGLE_ISSUER} \
+    RESEND_API_KEY=${RESEND_API_KEY} \
+    NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
+
+# Generate Prisma client
+RUN bunx prisma generate
+
+# Build Next.js application
+RUN bun run build
+
+# ---- Production Stage ----
+FROM base AS runner
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1001 -S nextapp && \
+    adduser -S -u 1001 -G nextapp nextapp
+
+# Copy necessary files from builder
+COPY --from=builder --chown=nextapp:nextapp /app/public ./public
+COPY --from=builder --chown=nextapp:nextapp /app/.next/standalone ./
+COPY --from=builder --chown=nextapp:nextapp /app/.next/static ./.next/static
+
+COPY --from=builder --chown=nextapp:nextapp /app/app/generated ./app/generated
+COPY --from=builder --chown=nextapp:nextapp /app/prisma ./prisma
+COPY --from=builder --chown=nextapp:nextapp /app/package.json ./package.json
+USER nextapp
+EXPOSE 3000
+
+# Set environment variables for runtime
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0" \
+    NEXT_TELEMETRY_DISABLED=1
+
+# Start the application
+CMD ["node","server.js"]

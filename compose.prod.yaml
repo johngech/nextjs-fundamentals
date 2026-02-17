@@ -1,0 +1,96 @@
+name: nextapp-prod
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      args:
+        # Database build args
+        - DB_ENGINE=${DB_ENGINE}
+        - DB_HOST=${DB_HOST}
+        - DB_PORT=${DB_PORT}
+        - DB_USER=${DB_USER}
+        - DB_PASSWORD=${DB_PASSWORD}
+        - DB_NAME=${DB_NAME}
+        
+        # Cloudinary
+        - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+        
+        # Auth build args
+        - AUTH_URL=${AUTH_URL}
+        - AUTH_SECRET=${AUTH_SECRET}
+        - AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID}
+        - AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET}
+        - AUTH_GOOGLE_ISSUER=${AUTH_GOOGLE_ISSUER}
+        
+        # Resend
+        - RESEND_API_KEY=${RESEND_API_KEY}
+
+    container_name: next-app-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Runtime environment variables (duplicated for safety)
+      - DB_ENGINE=${DB_ENGINE}
+      - DB_HOST=db  # Internal Docker hostname
+      - DB_PORT=3306
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+      - AUTH_URL=${AUTH_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID}
+      - AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET}
+      - AUTH_GOOGLE_ISSUER=${AUTH_GOOGLE_ISSUER}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: mysql:9.6.0  # Using stable version
+    container_name: mysql-db-prod
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      timeout: 10s
+      retries: 5
+      interval: 10s
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mysql_data_prod:
+    name: mysql-data-prod
+
+networks:
+  app-network:
+    driver: bridge

@@ -2,12 +2,11 @@
 // npm install --save-dev prisma dotenv
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
+
 import { envConfig } from "./config/env-config";
 const { engine, host, port, user, password, dbName } = envConfig.db;
-
 // Prisma mysql
 // DATABASE_URL="mysql://root:password@localhost:3306/nextapp"
-
 const databaseUrl = `${engine}://${user}:${password}@${host}:${port}/${dbName}`;
 
 export default defineConfig({

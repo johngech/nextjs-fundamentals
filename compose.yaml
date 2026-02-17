@@ -1,0 +1,54 @@
+name: nextapp
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Database build args (if needed at build time)
+        - DB_ENGINE=${DB_ENGINE}
+        - DB_HOST=${DB_HOST}
+        - DB_PORT=${DB_PORT}
+        - DB_USER=${DB_USER}
+        - DB_PASSWORD=${DB_PASSWORD}
+        - DB_NAME=${DB_NAME}
+        
+        # Cloudinary (needed at build time for Next.js public env)
+        - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+        
+        # Auth build args (if needed at build time)
+        - AUTH_URL=${AUTH_URL}
+        - AUTH_SECRET=${AUTH_SECRET}
+        - AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID}
+        - AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET}
+        - AUTH_GOOGLE_ISSUER=${AUTH_GOOGLE_ISSUER}
+        
+        # Resend
+        - RESEND_API_KEY=${RESEND_API_KEY}
+        
+        # Next.js specific
+        - NEXT_TELEMETRY_DISABLED=1
+        
+    container_name: next-app
+    ports:
+      - 3000:3000
+
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: mysql:9.6.0
+    container_name: mysql-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    ports:
+      - 3307:3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+    
+

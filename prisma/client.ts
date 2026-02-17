@@ -11,6 +11,7 @@ const PrismaClientSingleton = () => {
       user: user,
       password: password,
       database: dbName,
+      connectTimeout: 30,
     }),
   });
 };
